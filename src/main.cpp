@@ -1,4 +1,5 @@
 #include "main.h"
+int autoNum;
 
 void tray_control(void*) {
 	pros::Controller master(CONTROLLER_MASTER);
@@ -64,15 +65,54 @@ void arm_control(void*) {
  * When this callback is fired, it will toggle line 2 of the LCD text between
  * "I was pressed!" and nothing.
  */
-void on_center_button() {
+void on_button_left() {
 	static bool pressed = false;
 	pressed = !pressed;
 	if (pressed) {
-		pros::lcd::set_text(2, "I was pressed!");
+		pros::lcd::set_text(2, "Left");
+		autoNum = 0;
 	} else {
 		pros::lcd::clear_line(2);
+		autoNum = -1;
 	}
 }
+
+void on_button_center() {
+	static bool pressed = false;
+	pressed = !pressed;
+	if (pressed) {
+		pros::lcd::set_text(2, "Push");
+		autoNum = 1;
+	} else {
+		pros::lcd::clear_line(2);
+		autoNum = -1;
+	}
+}
+
+void on_button_right() {
+	static bool pressed = false;
+	pressed = !pressed;
+	if (pressed) {
+		pros::lcd::set_text(2, "Right");
+		autoNum = 2;
+	} else {
+		pros::lcd::clear_line(2);
+		autoNum = -1;
+	}
+}
+
+/*
+void left_auto (ChassisController::chassis) {
+	chassis->moveDistance(1_m);
+	int i = 0;
+	while (i < 100) {
+		set_rollers(127);
+		pros::delay(20);
+		i++;
+	}
+
+}
+*/
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -82,9 +122,10 @@ void on_center_button() {
  */
 void initialize() {
 	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Hello PROS User!");
-
-	pros::lcd::register_btn1_cb(on_center_button);
+	pros::lcd::set_text(1, "Select autonomous:");
+	pros::lcd::register_btn0_cb(on_button_left);
+	pros::lcd::register_btn1_cb(on_button_center);
+	pros::lcd::register_btn2_cb(on_button_right);
 }
 
 /**
@@ -119,13 +160,33 @@ void competition_initialize() {}
 void autonomous() {
 	auto chassis = ChassisControllerBuilder()
 		.withMotors(
-			{-1, -2}, // Left motors are 1 & 2 (reversed)
-			{3, 4}    // Right motors are 3 & 4
+			{18, 20}, //
+			{17, 19}    // (reversed)
 		)
     // Green gearset, 4 in wheel diam, 11.5 in wheel track
-    .withDimensions(AbstractMotor::gearset::green, {{4_in, 11.5_in}, imev5GreenTPR})
+    .withDimensions(AbstractMotor::gearset::green, {{3.25_in, 12.5_in}, imev5GreenTPR})
 		.build();
-		chassis->moveDistance(1_m);
+		chassis->setMaxVelocity(300);
+
+		switch (autoNum) {
+			case 0:
+				//left_auto;
+				break;
+			case 1:
+				chassis->moveDistance(-1_ft);
+				chassis->moveDistance(2_ft);
+				break;
+			case 2:
+
+				break;
+			default:
+				pros::lcd::set_text(2, "No autonomous selected");
+				pros::delay(2000);
+				pros::lcd::clear_line(2);
+
+		}
+
+
 }
 
 /**
