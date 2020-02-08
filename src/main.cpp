@@ -1,5 +1,5 @@
 #include "main.h"
-int autoNum;
+int autoNum = -1;
 
 void tray_control(void*) {
 	pros::Controller master(CONTROLLER_MASTER);
@@ -35,7 +35,7 @@ void arm_control(void*) {
 		if (master.get_digital(DIGITAL_B)) {
 			was_pid = true;
 			arm_t.resume();
-			set_arm_pid(2300);
+			set_arm_pid(2500);
 		} else if (master.get_digital(DIGITAL_DOWN)) {
 			was_pid = true;
 			arm_t.resume();
@@ -69,7 +69,7 @@ void on_button_left() {
 	static bool pressed = false;
 	pressed = !pressed;
 	if (pressed) {
-		pros::lcd::set_text(2, "Left");
+		pros::lcd::set_text(2, "Blue");
 		autoNum = 0;
 	} else {
 		pros::lcd::clear_line(2);
@@ -101,18 +101,6 @@ void on_button_right() {
 	}
 }
 
-/*
-void left_auto (ChassisController::chassis) {
-	chassis->moveDistance(1_m);
-	int i = 0;
-	while (i < 100) {
-		set_rollers(127);
-		pros::delay(20);
-		i++;
-	}
-
-}
-*/
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -166,24 +154,55 @@ void autonomous() {
     // Green gearset, 4 in wheel diam, 11.5 in wheel track
     .withDimensions(AbstractMotor::gearset::green, {{3.25_in, 12.5_in}, imev5GreenTPR})
 		.build();
-		chassis->setMaxVelocity(300);
 
-		switch (autoNum) {
-			case 0:
-				//left_auto;
-				break;
-			case 1:
-				chassis->moveDistance(-1_ft);
-				chassis->moveDistance(2_ft);
-				break;
-			case 2:
+		if (autoNum == 0) {
+			chassis->setMaxVelocity(50);
+			// Tasks
+			pros::Task tray_t(tray_pid);
+			pros::Task arm_t(arm_pid);
 
-				break;
-			default:
-				pros::lcd::set_text(2, "No autonomous selected");
-				pros::delay(2000);
-				pros::lcd::clear_line(2);
+			// Move tray
+			for(int i=0;i<1700;i=i+3) {
+				set_tray_pid(i);
+				pros::delay(5);
+			}
+			set_tray_pid(0);
 
+			pros::delay(1000);
+
+			// Move arm
+			set_arm_pid(1000);
+			set_arm(0);
+
+			pros::delay(1000);
+
+			// Move forward
+			chassis->moveDistanceAsync(37_in);
+
+			// Move rollers
+			set_rollers(127);
+			pros::delay(4000);
+			set_rollers(0);
+
+			chassis->moveDistance(-22_in);
+
+			chassis->turnAngle( -125.0_deg);
+
+			//
+
+		}
+		else if (autoNum == 1) {
+			chassis->setMaxVelocity(80);
+			chassis->moveDistance(-1_ft);
+			chassis->moveDistance(2_ft);
+		}
+		else if (autoNum == 2) {
+
+		}
+		else {
+			pros::lcd::set_text(2, "No autonomous selected");
+			pros::delay(2000);
+			pros::lcd::clear_line(2);
 		}
 
 
