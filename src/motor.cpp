@@ -1,7 +1,7 @@
 #include "main.h"
 
 pros::Motor left_back (20, MOTOR_GEARSET_18);
-pros::Motor left_mid (18, MOTOR_GEARSET_18);
+pros::Motor left_mid (15, MOTOR_GEARSET_18);
 pros::Motor right_back (19, MOTOR_GEARSET_18, true);
 pros::Motor right_mid (17, MOTOR_GEARSET_18, true);
 

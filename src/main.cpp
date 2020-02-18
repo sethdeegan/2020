@@ -35,11 +35,11 @@ void arm_control(void*) {
 		if (master.get_digital(DIGITAL_B)) {
 			was_pid = true;
 			arm_t.resume();
-			set_arm_pid(2500);
+			set_arm_pid(2800);
 		} else if (master.get_digital(DIGITAL_DOWN)) {
 			was_pid = true;
 			arm_t.resume();
-			set_arm_pid(1800);
+			set_arm_pid(2400);
 		} else {
 			if (master.get_digital(DIGITAL_R1)||master.get_digital(DIGITAL_R2)) {
 				was_pid = false;
@@ -148,7 +148,7 @@ void competition_initialize() {}
 void autonomous() {
 	auto chassis = ChassisControllerBuilder()
 		.withMotors(
-			{18, 20}, //
+			{15, 20}, //
 			{17, 19}    // (reversed)
 		)
     // Green gearset, 4 in wheel diam, 11.5 in wheel track
@@ -156,7 +156,7 @@ void autonomous() {
 		.build();
 
 		if (autoNum == 0) {
-			chassis->setMaxVelocity(50);
+			chassis->setMaxVelocity(65);
 			// Tasks
 			pros::Task tray_t(tray_pid);
 			pros::Task arm_t(arm_pid);
@@ -171,8 +171,9 @@ void autonomous() {
 			pros::delay(1000);
 
 			// Move arm
-			set_arm_pid(1000);
-			set_arm(0);
+			set_arm_pid(1500);
+			pros::delay(500);
+			set_arm_pid(0);
 
 			pros::delay(1000);
 
@@ -186,14 +187,50 @@ void autonomous() {
 
 			chassis->moveDistance(-22_in);
 
-			chassis->turnAngle( -125.0_deg);
+			chassis->turnAngle(-115.0_deg);
+
+			chassis->moveDistance(12_in);
+
+			for(int i=0;i<1700;i=i+3) {
+				set_tray_pid(i);
+				pros::delay(5);
+			}
+
+				chassis->moveDistance(2_in);
+
+				set_tray_pid(0);
+
+				chassis->moveDistance(-15_in);
+
+
 
 			//
-
 		}
+
 		else if (autoNum == 1) {
+
+			pros::Task tray_t(tray_pid);
+			pros::Task arm_t(arm_pid);
+
+			// Move tray
+			for(int i=0;i<1700;i=i+3) {
+				set_tray_pid(i);
+				pros::delay(5);
+			}
+			set_tray_pid(0);
+
+			pros::delay(1000);
+
+			// Move arm
+			set_arm_pid(1000);
+			pros::delay(1000);
+			set_arm_pid(0);
+
+			pros::delay(1000);
+
 			chassis->setMaxVelocity(80);
 			chassis->moveDistance(-1_ft);
+			pros::delay(250);
 			chassis->moveDistance(2_ft);
 		}
 		else if (autoNum == 2) {
@@ -204,9 +241,8 @@ void autonomous() {
 			pros::delay(2000);
 			pros::lcd::clear_line(2);
 		}
-
-
 }
+
 
 /**
  * Runs the operator control code. This function will be started in its own task
